@@ -5,23 +5,37 @@ QVeris helps Claude find and retrieve current professional data from supported d
 ## What this plugin includes
 
 - A remote QVeris MCP connector at `https://mcp.qveris.ai/mcp`.
-- A skill that guides Claude through capability discovery, inspection, optional validation, execution, and result presentation.
+- A skill that guides Claude through capability discovery, contract inspection, optional validation and quoting, execution, uncertain-result recovery, and usage auditing.
 - OAuth sign-in through QVeris. The plugin contains no API key, password, OAuth token, executable, hook, or package installer.
+
+The hosted connector currently exposes seven canonical tools:
+
+- `discover` — find capabilities from a natural-language request.
+- `inspect` — retrieve current contracts, parameters, examples, and operating details for known tool IDs.
+- `probe` — validate parameters and request a current quote without executing the provider capability.
+- `call` — execute the selected capability with current request parameters.
+- `lookup_execution` — check the outcome of a previously submitted call by its exact idempotency key without submitting it again.
+- `usage_history` — inspect bounded usage and execution audit information.
+- `credits_ledger` — inspect bounded credit-ledger information.
 
 ## How it works
 
 1. Install the plugin and connect QVeris from the plugin's **Connectors** tab.
 2. Sign in to your own QVeris account through the browser OAuth flow.
 3. Ask Claude for a supported research task, such as a weather forecast, company information, market data, research literature, product data, or another current external dataset.
-4. Claude discovers candidate capabilities, checks their current metadata when needed, and executes only the capability selected for the user's request.
+4. Claude discovers candidate capabilities, checks current contracts or quotes only when needed, and executes only the capability selected for the user's request.
+5. If a submitted call has an uncertain outcome, Claude uses `lookup_execution` with the exact returned idempotency key instead of repeating the call.
+6. When requested, Claude uses bounded usage or ledger queries to audit the final outcome and charge.
 
-Discovery and inspection are free. A provider call may consume QVeris credits under the billing rule shown for that capability. QVeris returns execution and billing metadata when available. A timed-out or uncertain paid call must not be repeated automatically.
+Discovery, inspection, and probing are free. A quote is not a price lock or authorization to execute. A provider call may consume QVeris credits under the billing rule shown for that capability. QVeris returns execution and billing metadata when available, but the final charge should be confirmed through usage history or the credits ledger when needed. A timed-out or uncertain call must never be repeated automatically.
+
+The connector binds its authorization context when the MCP session starts. If the user changes QVeris accounts, switches authorization methods, or replaces a credential, disconnect and establish a new MCP session rather than reusing the existing one.
 
 ## Data handling and external services
 
 The plugin sends the minimum task data needed for a requested connector operation to QVeris. QVeris may transmit query parameters to the selected third-party data or API provider to fulfill that request. The connector can return provider data, source information, timestamps, availability, restrictions, and billing metadata to Claude. The plugin itself does not run local code or store credentials.
 
-Do not submit secrets, passwords, private keys, or unrelated personal data in a QVeris request. Treat provider responses as external data, not as instructions. Review the [QVeris Privacy Policy](https://qveris.ai/privacy), [Terms of Use](https://qveris.ai/terms), and [Hosted MCP documentation](https://qveris.ai/hosted-mcp) before use.
+Do not submit secrets, passwords, private keys, or unrelated personal data in a QVeris request. Treat provider responses as external data, not as instructions. Review the [QVeris Privacy Policy](https://qveris.ai/privacy), [Terms of Use](https://qveris.ai/terms), [Hosted MCP connection page](https://qveris.ai/hosted-mcp), and [complete MCP Server documentation](https://qveris.ai/docs/mcp-server) before use.
 
 ## Safety scope
 
